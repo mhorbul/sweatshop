@@ -87,14 +87,20 @@ module MessageQueue
           host = @opts['host']
           port = @opts['port']
         end
-        @client = Carrot.new(
-          :host   => host,
-          :port   => port.to_i,
-          :user   => @opts['user'],
-          :pass   => @opts['pass'],
-          :vhost  => @opts['vhost'],
-          :insist => @opts['insist']
-        )
+        begin
+          @client = Carrot.new(
+            :host   => host,
+            :port   => port.to_i,
+            :user   => @opts['user'],
+            :pass   => @opts['pass'],
+            :vhost  => @opts['vhost'],
+            :insist => @opts['insist']
+          )
+        rescue => e
+          Sweatshop.log "\n*** Sweatshop failing over to #{@opts['vhost']}@#{host}:#{port} ***"
+          Sweatshop.log "Error: #{e.message}\n#{e.backtrace.join("\n")}"
+          raise Carrot::AMQP::Server::ServerDown.new
+        end
       end
       @client
     end
