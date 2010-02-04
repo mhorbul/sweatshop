@@ -1,13 +1,22 @@
 #!/usr/bin/env ruby
 
 if ARGV.include?('-d')
+  require 'rubygems'
   ARGV.delete('-d')
   ARGV.unshift('start') unless ARGV.detect{|a| ['start', 'restart'].include?(a)}
 
   root = File.expand_path(File.dirname(__FILE__) + '/..')
   ARGV << "--rails=#{root}"
 
-  system("ruby #{root}/vendor/gems/sweatshop/lib/sweatshop/sweatd.rb #{ARGV.join(' ')}")
+  version = ">= 0"
+
+  if ARGV.first =~ /^_(.*)_$/ and Gem::Version.correct? $1 then
+    version = $1
+    ARGV.shift
+  end
+
+  gem 'sweatshop', version
+  system("#{Gem.bin_path('sweatshop', 'sweatd', version)} #{ARGV.join(' ')}")
   exit $?.exitstatus
 else
   puts "Loading Rails..."
